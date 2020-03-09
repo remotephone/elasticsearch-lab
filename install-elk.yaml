@@ -10,9 +10,7 @@
     kibana_elasticsearch_username: username
     kibana_elasticsearch_password: password
   tasks:
-  - name: debug
-    debug: var=ansible_default_ipv4.address
-  - name: ensure dependencies and install elk
+  - name: ensure dependencies since we're in an lxc container
     apt:
       pkg: 
       - apt-transport-https
@@ -59,7 +57,7 @@
   - name: setup logstash configs
     copy:
       src: files/logstash/
-      dest: /etc/logstash/conf.d/
+      dest: /etc/logstash/conf.d
       owner: root
       group: root
       mode: 0644
