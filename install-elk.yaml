@@ -1,0 +1,70 @@
+---
+- hosts: elk
+  remote_user: elasticsearch
+  become: yes
+  vars:
+    kibana_version: 7.6.1
+    kibana_server_port: 5601
+    kibana_server_host: "{{ ansible_default_ipv4.address }}"
+    kibana_elasticsearch_url: '["http://localhost:9200"]'
+    kibana_elasticsearch_username: username
+    kibana_elasticsearch_password: password
+  tasks:
+  - name: debug
+    debug: var=ansible_default_ipv4.address
+  - name: ensure dependencies and install elk
+    apt:
+      pkg: 
+      - apt-transport-https
+      - ca-certificates
+      - gnupg
+      state: present
+      update_cache: yes
+  - name: add elastic gpg key
+    apt_key:
+      id: 46095ACC8548582C1A2699A9D27D666CD88E42B4
+      url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+      state: present
+  - name: add elasticsearch repository
+    apt_repository:
+      repo: deb https://artifacts.elastic.co/packages/7.x/apt stable main
+      state: present
+  - name: ensure dependencies and install elk
+    apt:
+      pkg: 
+      - apt-transport-https
+      - openjdk-8-jre
+      - elasticsearch
+      - logstash
+      - kibana
+      state: present
+      update_cache: yes
+  - name: enable elasticsearch and start it
+    service:
+      name: elasticsearch
+      enabled: yes
+      state: started
+  - name: setup kibana config
+    template:
+      src: files/kibana/kibana.yml.j2
+      dest: /etc/kibana/kibana.yml
+      owner: root
+      group: root
+      mode: 0644
+  - name: enable kibana and start it
+    service:
+      name: kibana
+      enabled: yes
+      state: restarted
+  - name: setup logstash configs
+    copy:
+      src: files/logstash/
+      dest: /etc/logstash/conf.d/
+      owner: root
+      group: root
+      mode: 0644
+  - name: enable logstash and start it
+    service:
+      name: logstash
+      enabled: yes
+      state: restarted
