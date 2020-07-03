@@ -9,6 +9,6 @@ output {
     hosts => ["http://localhost:9200"]
     index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM}"
     user => "logstash_internal"
-    password => "{{ x-pack-password }}"
+    password => "{{ x_pack_password }}"
   }
 }
