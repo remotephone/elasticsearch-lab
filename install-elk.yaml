@@ -11,6 +11,9 @@
       - apt-transport-https
       - ca-certificates
       - gnupg
+      - curl
+      - python3
+      - python3-pip
       state: present
       update_cache: yes
   - name: add elastic gpg key
@@ -32,6 +35,11 @@
       - kibana
       state: present
       update_cache: yes
+
+  - name: install pexpect
+    pip:
+      name: pexpect
+
   - name: setup elasticsearch configs
     template:
       src: files/elasticsearch/elasticsearch.yml.j2
@@ -55,19 +63,46 @@
       name: elasticsearch
       enabled: yes
       state: started
-  - name: Create Bootstrap password for elastic user
-    become: yes
-    shell: echo "{{es_api_basic_auth_password}}" | /usr/share/elasticsearch/bin/elasticsearch-keystore add -f -x 'bootstrap.password'
-  # - name: Update API User Password
-  #   uri:
-  #     url: "{{elasticsearch_url}}/_xpack/security/user/{{es_api_basic_auth_username}}/_password"
-  #     method: POST
-  #     body_format: json
-  #     body: "{ \"password\":\"{{kibana_elasticsearch_password}}\" }"
-  #     status_code: 200
-  #     user: "{{es_api_basic_auth_username}}"
-  #     password: "{{es_api_basic_auth_password}}"
-  #     force_basic_auth: yes
+
+  - name: set passwords interactively 
+    expect:
+      echo: yes
+      command: /usr/share/elasticsearch/bin/elasticsearch-setup-passwords interactive -b
+      responses:
+        (.*)elastic(.*): "{{elastic_password}}"
+        (.*)apm_system(.*): "{{apm_system_password}}"
+        (.*)kibana_system(.*): "{{kibana_system_password}}"
+        (.*)logstash_system(.*): "{{logstash_system_password}}"
+        (.*)beats_system(.*): "{{beats_system_password}}"
+        (.*)remote_monitoring_user(.*): "{{remote_monitoring_user_password}}"
+
+ 
+  - name: Update logstash_internal password
+    uri:
+      url: "{{elasticsearch_url}}/_security/user/logstash_internal"
+      method: POST
+      body_format: json
+      body: "{ \"password\": \"{{logstash_internal_password}}\", \"roles\": [ \"logstash_writer\" ], \"full_name\": \"Internal Logstash User\" }"
+      status_code: 200
+      user: "{{es_api_basic_auth_username}}"
+      password: "{{es_api_basic_auth_password}}"
+      force_basic_auth: yes
+ 
+  - name: Update logstash_internal password
+    uri:
+      url: "{{elasticsearch_url}}/_xpack/security/role/logstash_writer"
+      method: POST
+      body_format: json
+      body: "{ \"cluster\": [\"manage_index_templates\", \"monitor\", \"manage_ilm\"], \"indices\": [ { \"names\": [ \"logstash-*\" ], \"privileges\": [\"write\",\"create\",\"delete\",\"create_index\",\"manage\",\"manage_ilm\"] } ]}"
+      status_code: 200
+      user: "{{es_api_basic_auth_username}}"
+      password: "{{es_api_basic_auth_password}}"
+      force_basic_auth: yes
+
+  - name: restart elasticsearch
+    service:
+      name: elasticsearch
+      state: started
   - name: setup kibana config
     template:
       src: files/kibana/kibana.yml.j2

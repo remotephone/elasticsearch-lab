@@ -5,6 +5,13 @@ elasticsearch_url: http://localhost:9200
 kibana_elasticsearch_url: '["http://localhost:9200"]'
 kibana_elasticsearch_username: elastic
 kibana_elasticsearch_password: password
-x_pack_password: xpackpassword
+logstash_internal_password: password
+bootstrap_password: password
 es_api_basic_auth_username: elastic
 es_api_basic_auth_password: password
+elastic_password: password
+apm_system_password: password
+kibana_system_password: password
+logstash_system_password: password
+beats_system_password: password
+remote_monitoring_user_password: password
