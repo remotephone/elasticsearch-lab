@@ -22,6 +22,10 @@ elasticsearch.hosts: {{ kibana_elasticsearch_url }}
 # that connects to this Kibana instance.
 #elasticsearch.preserveHost: true
 
+# enable SSL 
+server.ssl.enabled: true
+server.ssl.certificate: /etc/kibana/fullchain.pem
+server.ssl.key: /etc/kibana/privkey.pem
 
 # If your Elasticsearch is protected with basic authentication, these settings provide
 # the username and password that the Kibana server uses to perform maintenance on the Kibana
@@ -33,4 +37,9 @@ elasticsearch.password: "{{ kibana_elasticsearch_password }}"
 {% else %}
 #elasticsearch.username: "user"
 #elasticsearch.password: "pass"
+xpack.encryptedSavedObjects.encryptionKey: "{{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=32') }}"
+elasticsearch.ssl.truststore.path: "/etc/kibana/elasticsearch-ca.p12"
+xpack.fleet.enabled: true
+xpack.fleet.agents.tlsCheckDisabled: true
+xpack.security.enabled: true
 {% endif %}
