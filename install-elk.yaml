@@ -110,6 +110,9 @@
       owner: root
       group: root
       mode: 0644
+  - name: use custom tool to grab ssl certs and put them where they are expected to be
+    ansible.builtin.shell:
+      cmd: /root/updatecerts.sh
   - name: enable kibana and start it
     service:
       name: kibana
