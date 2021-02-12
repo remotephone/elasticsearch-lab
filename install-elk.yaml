@@ -120,8 +120,15 @@
       state: restarted
   - name: setup logstash beats configs
     template:
-      src: files/logstash/01_beats.conf.j2
-      dest: /etc/logstash/conf.d/01_beats.conf
+      src: files/logstash
+      dest: /etc/logstash
+      owner: root
+      group: root
+      mode: 0644
+  - name: setup logstash beats configs
+    template:
+      src: files/logstash/logstash.yml.j2
+      dest: /etc/logstash/logstash.yml
       owner: root
       group: root
       mode: 0644
